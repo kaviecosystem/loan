@@ -1,0 +1,1626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KAVI Loan Protocol</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --bg2: #111318;
+    --bg3: #1a1d24;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #f0f0f0;
+    --muted: #7a7f8e;
+    --accent: #c8fb4e;
+    --accent2: #a0d63a;
+    --danger: #ff5f5f;
+    --success: #4eff91;
+    --warning: #ffb84e;
+    --mono: 'Space Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 15px; line-height: 1.6; min-height: 100vh; }
+
+  /* Header */
+  header { border-bottom: 1px solid var(--border); padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 60px; position: sticky; top: 0; background: rgba(10,12,16,0.9); backdrop-filter: blur(12px); z-index: 100; }
+  .logo { font-family: var(--mono); font-size: 16px; font-weight: 700; color: var(--accent); letter-spacing: -0.5px; }
+  .logo span { color: var(--muted); font-weight: 400; }
+  .connect-btn { font-family: var(--mono); font-size: 12px; font-weight: 700; background: var(--accent); color: #0a0c10; border: none; padding: 8px 18px; border-radius: var(--radius-sm); cursor: pointer; letter-spacing: 0.5px; transition: all 0.15s; }
+  .connect-btn:hover { background: var(--accent2); transform: translateY(-1px); }
+  .connect-btn.connected { background: transparent; border: 1px solid var(--border2); color: var(--accent); }
+
+  /* Layout */
+  .container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+  /* Stats bar */
+  .stats-bar { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 2rem; }
+  .stat-item { background: var(--bg2); padding: 1.1rem 1.25rem; }
+  .stat-label { font-size: 11px; font-family: var(--mono); color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+  .stat-value { font-family: var(--mono); font-size: 20px; font-weight: 700; color: var(--text); }
+  .stat-value.green { color: var(--success); }
+  .stat-value.yellow { color: var(--accent); }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 2px; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 4px; margin-bottom: 1.5rem; width: fit-content; }
+  .tab { font-family: var(--mono); font-size: 12px; font-weight: 700; letter-spacing: 0.5px; padding: 8px 20px; border-radius: 8px; border: none; background: transparent; color: var(--muted); cursor: pointer; transition: all 0.15s; }
+  .tab.active { background: var(--accent); color: #0a0c10; }
+  .tab:hover:not(.active) { color: var(--text); background: var(--bg3); }
+
+  /* Main grid */
+  .main-grid { display: grid; grid-template-columns: 1fr 340px; gap: 1.5rem; }
+
+  /* Panels */
+  .panel { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; }
+  .panel-title { font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 1.25rem; display: flex; align-items: center; gap: 8px; }
+  .panel-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* Form elements */
+  .field { margin-bottom: 1.25rem; }
+  .field label { display: block; font-size: 12px; font-family: var(--mono); color: var(--muted); letter-spacing: 0.5px; margin-bottom: 6px; }
+  .field input { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; color: var(--text); font-family: var(--mono); font-size: 14px; outline: none; transition: border 0.15s; }
+  .field input:focus { border-color: var(--accent); }
+  .field input::placeholder { color: var(--muted); }
+  .field-hint { font-size: 11px; color: var(--muted); margin-top: 5px; }
+
+  /* Buttons */
+  .btn { width: 100%; font-family: var(--mono); font-size: 13px; font-weight: 700; letter-spacing: 0.5px; padding: 13px; border-radius: var(--radius-sm); border: none; cursor: pointer; transition: all 0.15s; }
+  .btn-primary { background: var(--accent); color: #0a0c10; }
+  .btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
+  .btn-primary:disabled { background: var(--bg3); color: var(--muted); cursor: not-allowed; transform: none; border: 1px solid var(--border); }
+  .btn-outline { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+  .btn-outline:hover { background: rgba(200,251,78,0.08); }
+  .btn-danger { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
+  .btn-danger:hover { background: rgba(255,95,95,0.08); }
+
+  /* Preview box */
+  .preview-box { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem; margin: 1rem 0; }
+  .preview-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; }
+  .preview-row:not(:last-child) { border-bottom: 1px solid var(--border); }
+  .preview-key { font-size: 12px; color: var(--muted); }
+  .preview-val { font-family: var(--mono); font-size: 13px; color: var(--text); font-weight: 700; }
+  .preview-val.accent { color: var(--accent); }
+  .preview-val.danger { color: var(--danger); }
+  .preview-val.success { color: var(--success); }
+
+  /* Loan cards */
+  .loans-list { display: flex; flex-direction: column; gap: 1rem; }
+  .loan-card { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; position: relative; overflow: hidden; }
+  .loan-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--accent); }
+  .loan-card.closed::before { background: var(--muted); }
+  .loan-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
+  .loan-id { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .loan-badge { font-family: var(--mono); font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; letter-spacing: 0.5px; }
+  .loan-badge.active { background: rgba(200,251,78,0.12); color: var(--accent); border: 1px solid rgba(200,251,78,0.25); }
+  .loan-badge.closed { background: var(--bg2); color: var(--muted); border: 1px solid var(--border); }
+  .loan-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem; }
+  .loan-field { }
+  .loan-field-label { font-size: 11px; color: var(--muted); margin-bottom: 2px; }
+  .loan-field-value { font-family: var(--mono); font-size: 14px; font-weight: 700; }
+
+  /* APR indicator */
+  .apr-badge { display: inline-flex; align-items: center; gap: 5px; font-family: var(--mono); font-size: 12px; padding: 4px 10px; border-radius: 4px; background: rgba(255,184,78,0.1); color: var(--warning); border: 1px solid rgba(255,184,78,0.2); }
+
+  /* Info sidebar */
+  .info-card { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem; margin-bottom: 1rem; }
+  .info-title { font-size: 12px; font-family: var(--mono); color: var(--muted); letter-spacing: 0.5px; margin-bottom: 0.75rem; }
+  .info-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; }
+  .info-row:not(:last-child) { border-bottom: 1px solid var(--border); }
+  .info-row-key { color: var(--muted); }
+  .info-row-val { font-family: var(--mono); font-weight: 700; }
+
+  /* APR schedule */
+  .apr-schedule { display: flex; flex-direction: column; gap: 4px; }
+  .apr-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; padding: 5px 8px; border-radius: 5px; }
+  .apr-row.current { background: rgba(200,251,78,0.08); border: 1px solid rgba(200,251,78,0.15); }
+  .apr-period { color: var(--muted); font-family: var(--mono); }
+  .apr-rate { font-family: var(--mono); font-weight: 700; color: var(--accent); }
+  .apr-row:not(.current) .apr-rate { color: var(--muted); }
+
+  /* Loading state */
+  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(200,251,78,0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Toast */
+  #toast { position: fixed; bottom: 24px; right: 24px; z-index: 999; display: flex; flex-direction: column; gap: 8px; }
+  .toast-msg { font-family: var(--mono); font-size: 12px; padding: 10px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border2); background: var(--bg2); color: var(--text); animation: slideIn 0.2s ease; max-width: 320px; }
+  .toast-msg.success { border-color: var(--success); color: var(--success); }
+  .toast-msg.error { border-color: var(--danger); color: var(--danger); }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+
+  /* Empty state */
+  .empty { text-align: center; padding: 3rem 1rem; color: var(--muted); }
+  .empty-icon { font-size: 36px; margin-bottom: 0.75rem; opacity: 0.3; }
+  .empty-text { font-size: 14px; font-family: var(--mono); }
+
+  /* Divider */
+  .divider { height: 1px; background: var(--border); margin: 1rem 0; }
+
+  /* Connect overlay */
+  .connect-overlay { text-align: center; padding: 3rem 1rem; }
+  .connect-overlay h2 { font-family: var(--mono); font-size: 18px; color: var(--text); margin-bottom: 0.5rem; }
+  .connect-overlay p { color: var(--muted); font-size: 14px; margin-bottom: 1.5rem; }
+
+  /* Network warning */
+  .network-warn { background: rgba(255,184,78,0.08); border: 1px solid rgba(255,184,78,0.2); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 12px; font-family: var(--mono); color: var(--warning); margin-bottom: 1rem; display: none; }
+
+  /* Transaction status steps */
+  .tx-status-box { margin-top: 1rem; padding: 1rem; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+  .tx-steps { display: flex; flex-direction: column; gap: 0; }
+  .tx-step { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; position: relative; }
+  .tx-step:not(:last-child)::after { content: ''; position: absolute; left: 7px; top: 28px; bottom: -10px; width: 1px; background: var(--border); }
+  .tx-step-dot { width: 15px; height: 15px; border-radius: 50%; background: var(--bg2); border: 1px solid var(--border2); flex-shrink: 0; margin-top: 3px; transition: all 0.2s; }
+  .tx-step.pending .tx-step-dot { border-color: var(--accent); background: var(--accent); animation: pulse 1s ease-in-out infinite; }
+  .tx-step.done .tx-step-dot { border-color: var(--success); background: var(--success); animation: none; }
+  .tx-step.skipped .tx-step-dot { border-color: var(--muted); background: var(--muted); opacity: 0.4; }
+  .tx-step-body { flex: 1; }
+  .tx-step-title { font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--muted); transition: color 0.2s; }
+  .tx-step.pending .tx-step-title { color: var(--accent); }
+  .tx-step.done .tx-step-title { color: var(--success); }
+  .tx-step-desc { font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.5; }
+  .tx-step.pending .tx-step-desc { color: var(--text); }
+  @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(200,251,78,0.4); } 50% { box-shadow: 0 0 0 5px rgba(200,251,78,0); } }
+
+  /* Tx hash link */
+  .tx-link { font-family: var(--mono); font-size: 11px; color: var(--accent); text-decoration: none; word-break: break-all; }
+  .tx-link:hover { text-decoration: underline; }
+
+  /* Admin panel */
+  .tab.admin-tab { color: var(--warning); }
+  .tab.admin-tab.active { background: var(--warning); color: #0a0c10; }
+  .tab.admin-tab:hover:not(.active) { color: var(--warning); background: rgba(255,184,78,0.08); }
+  .admin-gate { background: rgba(255,184,78,0.05); border: 1px solid rgba(255,184,78,0.2); border-radius: var(--radius); padding: 2.5rem; text-align: center; }
+  .admin-gate-icon { font-size: 32px; margin-bottom: 0.75rem; }
+  .admin-gate-title { font-family: var(--mono); font-size: 15px; color: var(--warning); margin-bottom: 0.5rem; font-weight: 700; }
+  .admin-gate-text { font-size: 13px; color: var(--muted); line-height: 1.7; }
+  .admin-section { background: rgba(255,184,78,0.04); border: 1px solid rgba(255,184,78,0.15); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.25rem; }
+  .admin-section-title { font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--warning); margin-bottom: 1.25rem; display: flex; align-items: center; gap: 8px; }
+  .admin-section-title::after { content: ''; flex: 1; height: 1px; background: rgba(255,184,78,0.15); }
+  .danger-section { background: rgba(255,95,95,0.04); border: 1px solid rgba(255,95,95,0.15); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.25rem; }
+  .danger-section-title { font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--danger); margin-bottom: 1.25rem; display: flex; align-items: center; gap: 8px; }
+  .danger-section-title::after { content: ''; flex: 1; height: 1px; background: rgba(255,95,95,0.15); }
+  .admin-stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: rgba(255,184,78,0.1); border-radius: var(--radius-sm); overflow: hidden; margin-bottom: 1.25rem; }
+  .admin-stat { background: var(--bg3); padding: 1rem; }
+  .admin-stat-label { font-size: 10px; font-family: var(--mono); color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+  .admin-stat-value { font-family: var(--mono); font-size: 15px; font-weight: 700; color: var(--warning); }
+  .confirm-checkbox { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; cursor: pointer; }
+  .confirm-checkbox input { width: 16px; height: 16px; accent-color: var(--danger); cursor: pointer; margin-top: 2px; flex-shrink: 0; }
+  .confirm-checkbox span { font-size: 12px; font-family: var(--mono); color: var(--muted); line-height: 1.6; }
+
+  /* Wallet balance bar */
+  .wallet-bar { display: none; border-bottom: 1px solid var(--border); background: var(--bg2); padding: 0 2rem; }
+  .wallet-bar.visible { display: flex; }
+  .wallet-bar-inner { max-width: 1100px; margin: 0 auto; width: 100%; display: flex; align-items: center; gap: 2rem; padding: 7px 0; flex-wrap: wrap; }
+  .wallet-bal { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+  .wallet-bal-label { color: var(--muted); font-family: var(--mono); }
+  .wallet-bal-val { font-family: var(--mono); font-weight: 700; color: var(--text); }
+  .wallet-bal-val.kavi-val { color: var(--accent); }
+  .wallet-bal-val.usdt-val { color: var(--success); }
+  .wallet-bal-val.bnb-val { color: var(--warning); }
+  .price-pill { display: flex; align-items: center; gap: 6px; background: var(--bg3); border: 1px solid var(--border); border-radius: 20px; padding: 3px 10px; font-size: 11px; font-family: var(--mono); }
+  .price-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); animation: pulse 2s ease-in-out infinite; }
+  .price-change { font-size: 10px; }
+  .price-change.up { color: var(--success); }
+  .price-change.down { color: var(--danger); }
+  .refresh-bal-btn { margin-left: auto; font-family: var(--mono); font-size: 10px; padding: 3px 10px; border-radius: 4px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; transition: all 0.15s; }
+  .refresh-bal-btn:hover { color: var(--text); border-color: var(--border2); }
+
+  .section { display: none; }
+  .section.active { display: block; }
+
+  @media (max-width: 768px) {
+    .main-grid { grid-template-columns: 1fr; }
+    .stats-bar { grid-template-columns: repeat(3, 1fr); }
+    .wallet-bar { padding: 0 1rem; }
+    .wallet-bar-inner { gap: 1rem; }
+    header { padding: 0 1rem; }
+    .container { padding: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">KAVI<span>/</span>LOAN</div>
+  <button class="connect-btn" id="connectBtn" onclick="connectWallet()">Connect Wallet</button>
+</header>
+
+<!-- Wallet Balance Bar -->
+<div class="wallet-bar" id="walletBar">
+  <div class="wallet-bar-inner">
+    <div class="wallet-bal">
+      <span class="wallet-bal-label">KAVI</span>
+      <span class="wallet-bal-val kavi-val" id="walKavi">—</span>
+    </div>
+    <div class="wallet-bal">
+      <span class="wallet-bal-label">USDT</span>
+      <span class="wallet-bal-val usdt-val" id="walUsdt">—</span>
+    </div>
+    <div class="wallet-bal">
+      <span class="wallet-bal-label">BNB</span>
+      <span class="wallet-bal-val bnb-val" id="walBnb">—</span>
+    </div>
+    <div class="price-pill" id="kaviPricePill" style="display:none;">
+      <div class="price-dot"></div>
+      <span style="color:var(--muted);">KAVI</span>
+      <span id="kaviPriceVal" style="color:var(--text);font-weight:700;">—</span>
+      <span class="price-change" id="kaviPriceChange"></span>
+    </div>
+    <button class="refresh-bal-btn" onclick="loadWalletBalances()">↻ Refresh</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<div class="container">
+
+  <!-- Stats Bar -->
+  <div class="stats-bar" id="statsBar">
+    <div class="stat-item">
+      <div class="stat-label">KAVI Price</div>
+      <div class="stat-value" id="statKaviPrice" style="font-size:16px;">—</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">Pool Balance</div>
+      <div class="stat-value yellow" id="statPool">—</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">LP Burned</div>
+      <div class="stat-value green" id="statLpBurned">—</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">Base APR</div>
+      <div class="stat-value">26%</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">Network</div>
+      <div class="stat-value" id="statNetwork" style="font-size:13px;">—</div>
+    </div>
+  </div>
+
+  <!-- Network Warning -->
+  <div class="network-warn" id="networkWarn">
+    ⚠ Please switch to BNB Smart Chain (BSC Mainnet) to use this app.
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('deposit')">Deposit & Borrow</button>
+    <button class="tab" onclick="showTab('repay')">Repay Loan</button>
+    <button class="tab" onclick="showTab('myloans')">My Loans</button>
+    <button class="tab admin-tab" id="adminTab" onclick="showTab('admin')" style="display:none;">⚙ Admin</button>
+  </div>
+
+  <!-- DEPOSIT TAB -->
+  <div class="section active" id="tab-deposit">
+    <div class="main-grid">
+      <div>
+        <div class="panel">
+          <div class="panel-title">Deposit KAVI → Get USDT Loan</div>
+
+          <div id="depositConnectPrompt" class="connect-overlay" style="display:none;">
+            <div class="empty-icon">🔗</div>
+            <h2>Connect your wallet</h2>
+            <p>Connect your wallet to deposit KAVI and receive a USDT loan instantly.</p>
+            <button class="btn btn-primary" style="width:auto;padding:12px 32px;" onclick="connectWallet()">Connect Wallet</button>
+          </div>
+
+          <div id="depositForm">
+            <div class="field">
+              <label>KAVI Amount</label>
+              <input type="number" id="kaviAmountInput" placeholder="e.g. 10000" min="0" oninput="updateDepositPreview()" />
+              <div class="field-hint" style="display:flex;justify-content:space-between;">
+                <span>2% deposit fee applies</span>
+                <span id="kaviBalanceHint" style="color:var(--accent);">—</span>
+              </div>
+            </div>
+
+            <div id="depositPreview" style="display:none;">
+              <div class="preview-box">
+                <div class="preview-row">
+                  <span class="preview-key">Deposit Fee (2%)</span>
+                  <span class="preview-val danger" id="prevFee">—</span>
+                </div>
+                <div class="preview-row">
+                  <span class="preview-key">KAVI Sold on DEX (60%)</span>
+                  <span class="preview-val" id="prevSold">—</span>
+                </div>
+                <div class="preview-row">
+                  <span class="preview-key">KAVI Collateral in Pool (38%)</span>
+                  <span class="preview-val" id="prevCollat">—</span>
+                </div>
+                <div class="preview-row">
+                  <span class="preview-key">KAVI Owed Back (98%)</span>
+                  <span class="preview-val accent" id="prevOwed">—</span>
+                </div>
+                <div class="preview-row">
+                  <span class="preview-key">Estimated USDT Loan</span>
+                  <span class="preview-val success" id="prevUsdt">—</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Min USDT Out (slippage guard)</label>
+              <input type="number" id="minUsdtOut" placeholder="Auto-calculated" min="0" />
+              <div class="field-hint">Leave empty for auto (1% tolerance applied)</div>
+            </div>
+
+            <button class="btn btn-primary" id="depositBtn" onclick="depositAndBorrow()" disabled>
+              Approve & Deposit KAVI
+            </button>
+            <div id="depositStatus" class="tx-status-box" style="display:none;">
+              <div class="tx-steps">
+                <div class="tx-step" id="dStep1">
+                  <div class="tx-step-dot"></div>
+                  <div class="tx-step-body">
+                    <div class="tx-step-title">Step 1 — Approve KAVI</div>
+                    <div class="tx-step-desc">Allow this contract to spend your KAVI tokens</div>
+                  </div>
+                </div>
+                <div class="tx-step" id="dStep2">
+                  <div class="tx-step-dot"></div>
+                  <div class="tx-step-body">
+                    <div class="tx-step-title">Step 2 — Deposit & Borrow</div>
+                    <div class="tx-step-desc">Send KAVI to the contract and receive your USDT loan</div>
+                  </div>
+                </div>
+              </div>
+              <div id="dTxLink" style="display:none;margin-top:0.75rem;font-size:11px;font-family:var(--mono);color:var(--muted);">
+                Transaction: <a id="dTxAnchor" class="tx-link" href="#" target="_blank"></a>
+              </div>
+              <div id="dSuccessMsg" style="display:none;margin-top:0.75rem;padding:10px 14px;background:rgba(78,255,145,0.08);border:1px solid rgba(78,255,145,0.2);border-radius:8px;font-size:13px;font-family:var(--mono);color:var(--success);">
+                ✓ Loan created successfully! Your USDT loan has been sent to your wallet.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right sidebar -->
+      <div>
+        <div class="panel">
+          <div class="panel-title">How It Works</div>
+          <div class="info-card">
+            <div class="info-title">DEPOSIT FLOW</div>
+            <div class="info-row"><span class="info-row-key">2% of deposit</span><span class="info-row-val" style="color:var(--danger)">→ Fee Wallet</span></div>
+            <div class="info-row"><span class="info-row-key">60% of deposit</span><span class="info-row-val" style="color:var(--accent)">→ USDT Loan</span></div>
+            <div class="info-row"><span class="info-row-key">38% of deposit</span><span class="info-row-val" style="color:var(--muted)">→ Pool Lock</span></div>
+          </div>
+          <div class="info-card">
+            <div class="info-title">REPAY FLOW</div>
+            <div class="info-row"><span class="info-row-key">Principal USDT</span><span class="info-row-val" style="color:var(--accent)">→ KAVI Buyback</span></div>
+            <div class="info-row"><span class="info-row-key">Interest USDT</span><span class="info-row-val" style="color:var(--success)">→ LP Burned</span></div>
+            <div class="info-row"><span class="info-row-key">You receive back</span><span class="info-row-val" style="color:var(--accent)">98% of deposit</span></div>
+          </div>
+          <div class="info-card">
+            <div class="info-title">APR SCHEDULE</div>
+            <div class="apr-schedule">
+              <div class="apr-row current"><span class="apr-period">Day 0–90</span><span class="apr-rate">26% APR</span></div>
+              <div class="apr-row"><span class="apr-period">Day 90–180</span><span class="apr-rate">27% APR</span></div>
+              <div class="apr-row"><span class="apr-period">Day 180–270</span><span class="apr-rate">28% APR</span></div>
+              <div class="apr-row"><span class="apr-period">Day 270–360</span><span class="apr-rate">29% APR</span></div>
+              <div class="apr-row"><span class="apr-period">Day 360+</span><span class="apr-rate">+1%/90 days</span></div>
+            </div>
+            <div style="font-size:11px;color:var(--muted);margin-top:8px;font-family:var(--mono);">Compounds every 30 days</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REPAY TAB -->
+  <div class="section" id="tab-repay">
+    <div class="main-grid">
+      <div>
+        <div class="panel">
+          <div class="panel-title">Repay USDT → Recover KAVI</div>
+
+          <div id="repayConnectPrompt" class="connect-overlay" style="display:none;">
+            <div class="empty-icon">🔗</div>
+            <h2>Connect your wallet</h2>
+            <p>Connect your wallet to view and repay your loans.</p>
+            <button class="btn btn-primary" style="width:auto;padding:12px 32px;" onclick="connectWallet()">Connect Wallet</button>
+          </div>
+
+          <div id="repayForm">
+            <div class="field">
+              <label>Loan ID</label>
+              <input type="number" id="repayLoanId" placeholder="Enter loan ID (0, 1, 2…)" min="0" oninput="loadRepayPreview()" />
+              <div class="field-hint" style="display:flex;justify-content:space-between;">
+                <span>Check My Loans tab for your loan IDs</span>
+                <span id="usdtBalanceHint" style="color:var(--success);">—</span>
+              </div>
+            </div>
+
+            <div id="repayPreview" style="display:none;">
+              <div class="preview-box">
+                <div class="preview-row">
+                  <span class="preview-key">Principal</span>
+                  <span class="preview-val" id="repPrincipal">—</span>
+                </div>
+                <div class="preview-row">
+                  <span class="preview-key">Accrued Interest</span>
+                  <span class="preview-val danger" id="repInterest">—</span>
+                </div>
+                <div class="preview-row">
+                  <span class="preview-key">Total USDT Due</span>
+                  <span class="preview-val accent" id="repTotal">—</span>
+                </div>
+                <div class="preview-row">
+                  <span class="preview-key">Current APR</span>
+                  <span class="preview-val" id="repAPR">—</span>
+                </div>
+                <div class="preview-row">
+                  <span class="preview-key">Return Fee (2%)</span>
+                  <span class="preview-val danger" id="repFee">—</span>
+                </div>
+                <div class="preview-row">
+                  <span class="preview-key">KAVI You Receive</span>
+                  <span class="preview-val success" id="repKavi">—</span>
+                </div>
+              </div>
+            </div>
+
+            <div id="repaySlippage" style="display:none;">
+              <div class="divider"></div>
+              <div style="font-size:12px;font-family:var(--mono);color:var(--muted);margin-bottom:0.75rem;">SLIPPAGE SETTINGS (optional)</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+                <div class="field">
+                  <label>Min KAVI Buyback</label>
+                  <input type="number" id="minKaviBuyback" placeholder="0" min="0" />
+                </div>
+                <div class="field">
+                  <label>Min KAVI For LP</label>
+                  <input type="number" id="minKaviForLp" placeholder="0" min="0" />
+                </div>
+                <div class="field">
+                  <label>Min USDT LP</label>
+                  <input type="number" id="minUsdtLp" placeholder="0" min="0" />
+                </div>
+                <div class="field">
+                  <label>Min KAVI LP</label>
+                  <input type="number" id="minKaviLp" placeholder="0" min="0" />
+                </div>
+              </div>
+            </div>
+
+            <button class="btn btn-primary" id="repayBtn" onclick="repayLoan()" disabled>
+              Approve USDT & Repay
+            </button>
+            <div id="repayStatus" class="tx-status-box" style="display:none;">
+              <div class="tx-steps">
+                <div class="tx-step" id="rStep1">
+                  <div class="tx-step-dot"></div>
+                  <div class="tx-step-body">
+                    <div class="tx-step-title">Step 1 — Approve USDT</div>
+                    <div class="tx-step-desc">Allow this contract to spend your USDT tokens</div>
+                  </div>
+                </div>
+                <div class="tx-step" id="rStep2">
+                  <div class="tx-step-dot"></div>
+                  <div class="tx-step-body">
+                    <div class="tx-step-title">Step 2 — Repay Loan</div>
+                    <div class="tx-step-desc">Send USDT to repay your loan and receive KAVI back</div>
+                  </div>
+                </div>
+              </div>
+              <div id="rTxLink" style="display:none;margin-top:0.75rem;font-size:11px;font-family:var(--mono);color:var(--muted);">
+                Transaction: <a id="rTxAnchor" class="tx-link" href="#" target="_blank"></a>
+              </div>
+              <div id="rSuccessMsg" style="display:none;margin-top:0.75rem;padding:10px 14px;background:rgba(78,255,145,0.08);border:1px solid rgba(78,255,145,0.2);border-radius:8px;font-size:13px;font-family:var(--mono);color:var(--success);">
+                ✓ Loan repaid! Your KAVI has been returned to your wallet.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="panel">
+          <div class="panel-title">Repay Info</div>
+          <div class="info-card">
+            <div class="info-title">WHAT HAPPENS ON REPAY</div>
+            <div class="info-row"><span class="info-row-key">Principal USDT</span><span class="info-row-val">→ Buys KAVI</span></div>
+            <div class="info-row"><span class="info-row-key">Interest USDT</span><span class="info-row-val">→ Adds Liquidity</span></div>
+            <div class="info-row"><span class="info-row-key">LP Tokens</span><span class="info-row-val" style="color:var(--danger)">→ Burned 🔥</span></div>
+            <div class="info-row"><span class="info-row-key">Your KAVI return</span><span class="info-row-val" style="color:var(--success)">98% of deposit</span></div>
+          </div>
+          <div class="info-card">
+            <div class="info-title">FEES ON REPAY</div>
+            <div style="font-size:13px;color:var(--muted);line-height:1.7;">
+              A <span style="color:var(--text);font-family:var(--mono);font-weight:700;">2% return fee</span> is applied to your <code style="background:var(--bg2);padding:2px 5px;border-radius:4px;font-size:11px;">kaviOwed</code> amount. The remaining 98% is transferred to your wallet.
+            </div>
+          </div>
+          <div class="info-card" style="background:rgba(255,95,95,0.05);border-color:rgba(255,95,95,0.15);">
+            <div class="info-title" style="color:var(--danger);">⚠ INTEREST GROWS OVER TIME</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.7;">
+              Interest compounds monthly. APR increases 1% every 90 days. Repay sooner to minimize interest cost.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MY LOANS TAB -->
+  <div class="section" id="tab-myloans">
+    <div class="main-grid">
+      <div>
+        <div class="panel">
+          <div class="panel-title">My Loans</div>
+          <div id="loansConnectPrompt" class="connect-overlay" style="display:none;">
+            <div class="empty-icon">🔗</div>
+            <h2>Connect your wallet</h2>
+            <p>Connect your wallet to view your loan history.</p>
+            <button class="btn btn-primary" style="width:auto;padding:12px 32px;" onclick="connectWallet()">Connect Wallet</button>
+          </div>
+          <div id="loansLoading" style="display:none;text-align:center;padding:2rem;color:var(--muted);font-family:var(--mono);font-size:13px;">
+            <div class="spinner" style="margin:0 auto 0.75rem;width:20px;height:20px;border-width:2px;"></div>
+            Loading loans...
+          </div>
+          <div id="loansList" class="loans-list"></div>
+          <button class="btn btn-outline" style="margin-top:1rem;" onclick="loadMyLoans()">↻ Refresh</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="panel">
+          <div class="panel-title">Pool Status</div>
+          <div class="info-card">
+            <div class="info-title">LIVE POOL INFO</div>
+            <div class="info-row"><span class="info-row-key">Tracked KAVI Pool</span><span class="info-row-val yellow" id="poolKavi">—</span></div>
+            <div class="info-row"><span class="info-row-key">Raw KAVI Balance</span><span class="info-row-val" id="poolRawKavi">—</span></div>
+            <div class="info-row"><span class="info-row-key">USDT in Contract</span><span class="info-row-val" id="poolRawUsdt">—</span></div>
+            <div class="info-row"><span class="info-row-key">Total LP Burned</span><span class="info-row-val" style="color:var(--danger)" id="poolLpBurned">—</span></div>
+          </div>
+          <button class="btn btn-outline" onclick="loadPoolInfo()">↻ Refresh Pool</button>
+          <div style="margin-top:1rem;font-size:11px;font-family:var(--mono);color:var(--muted);">
+            Contract: <a class="tx-link" href="https://bscscan.com/address/0xDc24Ab5cDF294a647E511b97Fd02432bB5864F80" target="_blank">0xDc24...4F80</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN TAB -->
+  <div class="section" id="tab-admin">
+
+    <!-- Not Admin Warning -->
+    <div id="adminGate" class="admin-gate" style="display:none;">
+      <div class="admin-gate-icon">🔒</div>
+      <div class="admin-gate-title">Admin Access Only</div>
+      <div class="admin-gate-text">
+        This panel is restricted to the contract admin wallet.<br>
+        Connected: <span id="adminGateAddress" style="font-family:var(--mono);color:var(--accent);"></span>
+      </div>
+    </div>
+
+    <!-- Admin Content -->
+    <div id="adminContent" style="display:none;">
+      <div style="display:grid;grid-template-columns:1fr 340px;gap:1.5rem;">
+
+        <!-- Left Column -->
+        <div>
+
+          <!-- Live Stats -->
+          <div class="admin-section">
+            <div class="admin-section-title">Live Contract Stats</div>
+            <div class="admin-stat-grid">
+              <div class="admin-stat">
+                <div class="admin-stat-label">KAVI Pool</div>
+                <div class="admin-stat-value" id="adminStatPool">—</div>
+              </div>
+              <div class="admin-stat">
+                <div class="admin-stat-label">Raw KAVI Bal</div>
+                <div class="admin-stat-value" id="adminStatRawKavi">—</div>
+              </div>
+              <div class="admin-stat">
+                <div class="admin-stat-label">USDT in Contract</div>
+                <div class="admin-stat-value" id="adminStatUsdt">—</div>
+              </div>
+              <div class="admin-stat">
+                <div class="admin-stat-label">Total LP Burned</div>
+                <div class="admin-stat-value" id="adminStatLp">—</div>
+              </div>
+              <div class="admin-stat">
+                <div class="admin-stat-label">KAVI Token</div>
+                <div class="admin-stat-value" id="adminStatKaviAddr" style="font-size:11px;word-break:break-all;">—</div>
+              </div>
+              <div class="admin-stat">
+                <div class="admin-stat-label">USDT Token</div>
+                <div class="admin-stat-value" id="adminStatUsdtAddr" style="font-size:11px;word-break:break-all;">—</div>
+              </div>
+            </div>
+            <button class="btn btn-outline" style="font-size:12px;padding:9px;" onclick="loadAdminStats()">↻ Refresh Stats</button>
+          </div>
+
+          <!-- Deposit KAVI Reserve -->
+          <div class="admin-section">
+            <div class="admin-section-title">Deposit KAVI Reserve</div>
+            <div style="font-size:13px;color:var(--muted);margin-bottom:1rem;line-height:1.7;">
+              Add KAVI to the pool reserve. The pool must always hold enough KAVI to cover all active <code style="background:var(--bg);padding:2px 6px;border-radius:4px;font-size:11px;">kaviOwed</code> amounts across all active loans.
+            </div>
+            <div class="field">
+              <label>KAVI Amount to Deposit</label>
+              <input type="number" id="adminReserveAmount" placeholder="e.g. 1000000" min="0" oninput="updateReservePreview()" />
+              <div class="field-hint" id="adminReserveHint">Enter amount to see pool change</div>
+            </div>
+            <button class="btn" style="background:var(--warning);color:#0a0c10;font-family:var(--mono);font-weight:700;" id="adminReserveBtn" onclick="adminDepositReserve()">
+              Approve & Deposit KAVI Reserve
+            </button>
+            <div id="adminReserveStatus" class="tx-status-box" style="display:none;">
+              <div class="tx-steps">
+                <div class="tx-step" id="aStep1">
+                  <div class="tx-step-dot"></div>
+                  <div class="tx-step-body">
+                    <div class="tx-step-title">Step 1 — Approve KAVI</div>
+                    <div class="tx-step-desc">Allow the contract to pull KAVI from your wallet</div>
+                  </div>
+                </div>
+                <div class="tx-step" id="aStep2">
+                  <div class="tx-step-dot"></div>
+                  <div class="tx-step-body">
+                    <div class="tx-step-title">Step 2 — Deposit Reserve</div>
+                    <div class="tx-step-desc">Send KAVI to the pool reserve</div>
+                  </div>
+                </div>
+              </div>
+              <div id="aTxLink" style="display:none;margin-top:0.75rem;font-size:11px;font-family:var(--mono);color:var(--muted);">
+                Transaction: <a id="aTxAnchor" class="tx-link" href="#" target="_blank"></a>
+              </div>
+              <div id="aSuccessMsg" style="display:none;margin-top:0.75rem;padding:10px 14px;background:rgba(78,255,145,0.08);border:1px solid rgba(78,255,145,0.2);border-radius:8px;font-size:13px;font-family:var(--mono);color:var(--success);">
+                ✓ KAVI reserve deposited. Pool balance has been updated.
+              </div>
+            </div>
+          </div>
+
+          <!-- Emergency Withdraw -->
+          <div class="danger-section">
+            <div class="danger-section-title">⚠ Emergency Withdrawal</div>
+            <div style="font-size:13px;color:var(--muted);margin-bottom:1rem;line-height:1.7;">
+              Withdraw any token from the contract in emergency situations. For KAVI withdrawals, <code style="background:var(--bg);padding:2px 6px;border-radius:4px;font-size:11px;">kaviPool</code> is automatically decremented. Use with extreme caution.
+            </div>
+
+            <div class="field">
+              <label>Token Address</label>
+              <input type="text" id="ewTokenAddr" placeholder="0x... (KAVI, USDT, or LP token)" oninput="fetchEwBalance()" />
+              <div style="display:flex;gap:8px;margin-top:6px;">
+                <button onclick="prefillToken('kavi')" style="font-family:var(--mono);font-size:10px;padding:4px 10px;border-radius:4px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;">Use KAVI</button>
+                <button onclick="prefillToken('usdt')" style="font-family:var(--mono);font-size:10px;padding:4px 10px;border-radius:4px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;">Use USDT</button>
+                <button onclick="prefillToken('lp')" style="font-family:var(--mono);font-size:10px;padding:4px 10px;border-radius:4px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;">Use LP Token</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Recipient Address</label>
+              <input type="text" id="ewRecipient" placeholder="0x... wallet to receive tokens" />
+              <div style="display:flex;gap:8px;margin-top:6px;">
+                <button onclick="prefillRecipient()" style="font-family:var(--mono);font-size:10px;padding:4px 10px;border-radius:4px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;">Use My Wallet</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Amount</label>
+              <input type="number" id="ewAmount" placeholder="Amount in token units (e.g. 1000)" min="0" />
+              <div style="display:flex;gap:8px;margin-top:6px;">
+                <button onclick="prefillMaxAmount()" style="font-family:var(--mono);font-size:10px;padding:4px 10px;border-radius:4px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;">Full Balance</button>
+              </div>
+            </div>
+
+            <div id="ewBalanceInfo" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:1rem;font-size:12px;font-family:var(--mono);color:var(--muted);display:none;">
+              Contract balance: <span id="ewBalDisplay" style="color:var(--text);font-weight:700;"></span>
+            </div>
+
+            <label class="confirm-checkbox">
+              <input type="checkbox" id="ewConfirm" onchange="toggleEwBtn()" />
+              <span>I understand this is an emergency action. I have verified the token address, recipient, and amount. This cannot be undone.</span>
+            </label>
+
+            <button class="btn btn-danger" id="ewBtn" onclick="adminEmergencyWithdraw()" disabled style="margin-top:0.5rem;">
+              Emergency Withdraw
+            </button>
+            <div id="ewStatus" style="margin-top:0.75rem;font-size:12px;font-family:var(--mono);color:var(--muted);"></div>
+          </div>
+
+        </div>
+
+        <!-- Right Sidebar -->
+        <div>
+          <div class="panel">
+            <div class="panel-title">Admin Info</div>
+
+            <div class="info-card" style="background:rgba(255,184,78,0.05);border-color:rgba(255,184,78,0.15);">
+              <div class="info-title" style="color:var(--warning);">ADMIN WALLET</div>
+              <div style="font-family:var(--mono);font-size:11px;word-break:break-all;color:var(--accent);" id="adminWalletDisplay">—</div>
+            </div>
+
+            <div class="info-card">
+              <div class="info-title">CONTRACT</div>
+              <div class="info-row">
+                <span class="info-row-key">Address</span>
+                <a class="tx-link" href="https://bscscan.com/address/0xDc24Ab5cDF294a647E511b97Fd02432bB5864F80" target="_blank">0xDc24...4F80</a>
+              </div>
+              <div class="info-row">
+                <span class="info-row-key">Network</span>
+                <span class="info-row-val" style="color:var(--success);">BSC Mainnet</span>
+              </div>
+              <div class="info-row">
+                <span class="info-row-key">Version</span>
+                <span class="info-row-val">v6.0</span>
+              </div>
+            </div>
+
+            <div class="info-card">
+              <div class="info-title">ADMIN FUNCTIONS</div>
+              <div class="info-row"><span class="info-row-key">depositKaviReserve</span><span class="info-row-val" style="color:var(--warning);">✓ Active</span></div>
+              <div class="info-row"><span class="info-row-key">emergencyWithdraw</span><span class="info-row-val" style="color:var(--danger);">⚠ Caution</span></div>
+            </div>
+
+            <div class="info-card" style="background:rgba(255,95,95,0.04);border-color:rgba(255,95,95,0.15);">
+              <div class="info-title" style="color:var(--danger);">IMMUTABLE RULES</div>
+              <div style="font-size:12px;color:var(--muted);line-height:1.8;">
+                • Contract is fully immutable<br>
+                • No admin power to change fees<br>
+                • No admin power to pause loans<br>
+                • Only reserve & emergency functions
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.7.0/dist/ethers.umd.min.js"></script>
+<script>
+const CONTRACT_ADDRESS = "0xDc24Ab5cDF294a647E511b97Fd02432bB5864F80";
+const BSC_CHAIN_ID = 56;
+
+const ABI = [
+  "function depositAndBorrow(uint256 kaviAmount, uint256 minUsdtOut) external",
+  "function repayLoan(uint256 loanId, uint256 minKaviBuyback, uint256 minKaviForLp, uint256 minUsdtLp, uint256 minKaviLp) external",
+  "function getTotalDue(address borrower, uint256 loanId) external view returns (uint256)",
+  "function getAccruedInterest(address borrower, uint256 loanId) external view returns (uint256)",
+  "function getCurrentAPR(address borrower, uint256 loanId) external view returns (uint256)",
+  "function getUserLoans(address user) external view returns (tuple(uint256 kaviOwed, uint256 usdtLoanAmount, uint64 startTime, bool active)[])",
+  "function poolInfo() external view returns (uint256 pool, uint256 rawKavi, uint256 rawUsdt)",
+  "function previewDeposit(uint256 kaviAmount) external view returns (uint256 depositFee, uint256 kaviSold, uint256 kaviCollateral, uint256 kaviOwed, uint256 estimatedUsdt)",
+  "function previewRepay(address borrower, uint256 loanId) external view returns (uint256 totalDue, uint256 principal, uint256 interest, uint256 kaviToUser, uint256 returnFee, uint256 currentAPR, uint256 estKaviBuyback, uint256 estKaviForLp)",
+  "function loanCount(address) external view returns (uint256)",
+  "function kaviPool() external view returns (uint256)",
+  "function totalLpBurned() external view returns (uint256)",
+  "function kaviToken() external view returns (address)",
+  "function usdtToken() external view returns (address)",
+  "function lpToken() external view returns (address)",
+  "function admin() external view returns (address)",
+  "function feeWallet() external view returns (address)",
+  "function depositKaviReserve(uint256 amount) external",
+  "function emergencyWithdraw(address token, address to, uint256 amount) external",
+  "function DEPOSIT_FEE_BPS() external view returns (uint256)",
+  "function SELL_BPS() external view returns (uint256)"
+];
+
+const ERC20_ABI = [
+  "function approve(address spender, uint256 amount) external returns (bool)",
+  "function allowance(address owner, address spender) external view returns (uint256)",
+  "function balanceOf(address account) external view returns (uint256)",
+  "function decimals() external view returns (uint8)"
+];
+
+let provider, signer, contract, userAddress;
+let kaviTokenAddress, usdtTokenAddress;
+let txPending = false;
+let refreshIntervals = [];
+
+function showTab(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+  if (name === 'myloans' && userAddress) { loadMyLoans(); loadPoolInfo(); }
+  if (name === 'admin') { loadAdminStats(); }
+}
+
+async function checkAdminAccess() {
+  if (!contract || !userAddress) return;
+  try {
+    const adminAddr = await contract.admin();
+    const isAdmin = adminAddr.toLowerCase() === userAddress.toLowerCase();
+    document.getElementById('adminTab').style.display = isAdmin ? 'flex' : 'none';
+    document.getElementById('adminWalletDisplay').textContent = adminAddr;
+    document.getElementById('adminGateAddress').textContent = userAddress.slice(0,6) + '...' + userAddress.slice(-4);
+  } catch {}
+}
+
+function toast(msg, type = '') {
+  const el = document.createElement('div');
+  el.className = 'toast-msg' + (type ? ' ' + type : '');
+  el.textContent = msg;
+  document.getElementById('toast').appendChild(el);
+  setTimeout(() => el.remove(), 5000);
+}
+
+function fmt(val, decimals = 18, display = 4) {
+  try {
+    const n = parseFloat(ethers.formatUnits(val, decimals));
+    if (n >= 1000000) return (n / 1000000).toFixed(2) + 'M';
+    if (n >= 1000) return (n / 1000).toFixed(2) + 'K';
+    return n.toFixed(display);
+  } catch { return '—'; }
+}
+
+function fmtKavi(val) { return fmt(val, 18, 2) + ' KAVI'; }
+function fmtUsdt(val) { return fmt(val, 18, 4) + ' USDT'; }
+function fmtApr(bps) { return (Number(bps) / 100).toFixed(0) + '%'; }
+
+async function connectWallet() {
+  if (!window.ethereum) { toast('MetaMask not found. Please install it.', 'error'); return; }
+  try {
+    provider = new ethers.BrowserProvider(window.ethereum);
+    await provider.send("eth_requestAccounts", []);
+    signer = await provider.getSigner();
+    userAddress = await signer.getAddress();
+    contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+
+    const network = await provider.getNetwork();
+    const chainId = Number(network.chainId);
+
+    const btn = document.getElementById('connectBtn');
+    btn.textContent = userAddress.slice(0,6) + '...' + userAddress.slice(-4);
+    btn.classList.add('connected');
+
+    if (chainId !== BSC_CHAIN_ID) {
+      document.getElementById('networkWarn').style.display = 'block';
+      document.getElementById('statNetwork').textContent = 'Wrong Network';
+      document.getElementById('statNetwork').style.color = 'var(--danger)';
+      toast('Please switch to BSC Mainnet.', 'error');
+    } else {
+      document.getElementById('networkWarn').style.display = 'none';
+      document.getElementById('statNetwork').textContent = 'BSC Mainnet';
+      document.getElementById('statNetwork').style.color = 'var(--success)';
+    }
+
+    // Load token addresses once — used by balance bar, price, previews
+    try {
+      kaviTokenAddress = await contract.kaviToken();
+      usdtTokenAddress = await contract.usdtToken();
+    } catch {}
+
+    updateUI();
+    await loadStats();
+    await loadWalletBalances();
+    loadKaviPrice();
+
+    // Clear any stale intervals from a previous connection, then start fresh
+    refreshIntervals.forEach(id => clearInterval(id));
+    refreshIntervals = [
+      setInterval(loadWalletBalances, 30_000),
+      setInterval(loadKaviPrice, 60_000)
+    ];
+
+    window.ethereum.on('accountsChanged', () => location.reload());
+    window.ethereum.on('chainChanged', () => location.reload());
+
+    toast('Wallet connected!', 'success');
+  } catch (e) {
+    toast('Connection failed: ' + (e.message || e), 'error');
+  }
+}
+
+function updateUI() {
+  const connected = !!userAddress;
+
+  document.getElementById('depositConnectPrompt').style.display = connected ? 'none' : 'block';
+  document.getElementById('depositForm').style.display = connected ? 'block' : 'none';
+  document.getElementById('repayConnectPrompt').style.display = connected ? 'none' : 'block';
+  document.getElementById('repayForm').style.display = connected ? 'block' : 'none';
+  document.getElementById('loansConnectPrompt').style.display = connected ? 'none' : 'block';
+
+  const walBar = document.getElementById('walletBar');
+  if (connected) walBar.classList.add('visible');
+  else walBar.classList.remove('visible');
+
+  if (connected) {
+    document.getElementById('depositBtn').disabled = false;
+    checkAdminAccess();
+  }
+}
+
+async function loadStats() {
+  if (!contract) return;
+  try {
+    const pool = await contract.kaviPool();
+    const burned = await contract.totalLpBurned();
+    document.getElementById('statPool').textContent = fmtKavi(pool);
+    document.getElementById('statLpBurned').textContent = fmt(burned, 18, 4) + ' LP';
+  } catch {}
+}
+
+async function loadKaviPrice() {
+  try {
+    const addr = kaviTokenAddress || '';
+    if (!addr) return;
+    const res = await fetch(
+      'https://api.coingecko.com/api/v3/simple/token_price/binance-smart-chain' +
+      '?contract_addresses=' + addr +
+      '&vs_currencies=usd&include_24hr_change=true',
+      { headers: { 'Accept': 'application/json' } }
+    );
+    if (!res.ok) throw new Error('fetch failed');
+    const data = await res.json();
+    const key = Object.keys(data)[0];
+    if (!key) throw new Error('no data');
+    const price = data[key].usd;
+    const change = data[key].usd_24h_change;
+    if (!price) throw new Error('no price');
+    displayKaviPrice(price, change);
+  } catch {
+    // Fallback: derive price from PancakeSwap via router getAmountsOut on 1 KAVI
+    // Use previewDeposit(1 KAVI): estimatedUsdt = output for 0.6 KAVI sold
+    // (because 2% fee deducted first: 1 KAVI → 0.98 KAVI after fee → 60% of 1 = 0.6 sold)
+    // So price per KAVI = estimatedUsdt / 0.6
+    try {
+      if (!contract || !kaviTokenAddress) return;
+      const result = await contract.previewDeposit(ethers.parseUnits('1', 18));
+      const estimatedUsdt = result[4];
+      const usdtNum = parseFloat(ethers.formatUnits(estimatedUsdt, 18));
+      const pricePerKavi = usdtNum / 0.6;
+      displayKaviPrice(pricePerKavi, null);
+    } catch {}
+  }
+}
+
+function displayKaviPrice(price, change) {
+  const priceStr = price < 0.0001
+    ? '$' + price.toExponential(2)
+    : price < 1
+      ? '$' + price.toFixed(6)
+      : '$' + price.toFixed(4);
+
+  document.getElementById('statKaviPrice').textContent = priceStr;
+  document.getElementById('statKaviPrice').style.color =
+    change === null ? 'var(--accent)' : change >= 0 ? 'var(--success)' : 'var(--danger)';
+
+  document.getElementById('kaviPriceVal').textContent = priceStr;
+  document.getElementById('kaviPricePill').style.display = 'flex';
+
+  const changeEl = document.getElementById('kaviPriceChange');
+  if (change !== null && change !== undefined) {
+    const sign = change >= 0 ? '+' : '';
+    changeEl.textContent = sign + change.toFixed(2) + '%';
+    changeEl.className = 'price-change ' + (change >= 0 ? 'up' : 'down');
+  } else {
+    changeEl.textContent = 'DEX';
+    changeEl.className = 'price-change';
+    changeEl.style.color = 'var(--muted)';
+  }
+}
+
+async function loadWalletBalances() {
+  if (!userAddress || !provider) return;
+
+  const USDT_ADDR = usdtTokenAddress || '0x55d398326f99059fF775485246999027B3197955';
+
+  try {
+    const [bnbBal, kaviBal, usdtBal] = await Promise.all([
+      provider.getBalance(userAddress),
+      kaviTokenAddress
+        ? new ethers.Contract(kaviTokenAddress, ERC20_ABI, provider).balanceOf(userAddress)
+        : Promise.resolve(null),
+      new ethers.Contract(USDT_ADDR, ERC20_ABI, provider).balanceOf(userAddress)
+    ]);
+
+    document.getElementById('walBnb').textContent =
+      parseFloat(ethers.formatEther(bnbBal)).toFixed(4) + ' BNB';
+
+    if (kaviBal !== null) {
+      const kaviStr = fmtKavi(kaviBal);
+      document.getElementById('walKavi').textContent = kaviStr;
+      // Also update the hint inside deposit form so user knows their balance
+      const hint = document.getElementById('kaviBalanceHint');
+      if (hint) hint.textContent = 'Your wallet: ' + kaviStr;
+    }
+
+    const usdtStr = fmtUsdt(usdtBal);
+    document.getElementById('walUsdt').textContent = usdtStr;
+    // Update repay form hint too
+    const usdtHint = document.getElementById('usdtBalanceHint');
+    if (usdtHint) usdtHint.textContent = 'Your wallet: ' + usdtStr;
+
+  } catch { /* silent — balance bar is non-critical */ }
+}
+
+async function updateDepositPreview() {
+  const input = document.getElementById('kaviAmountInput').value;
+  const btn = document.getElementById('depositBtn');
+  if (!input || parseFloat(input) <= 0 || !contract) {
+    document.getElementById('depositPreview').style.display = 'none';
+    btn.textContent = 'Approve & Deposit KAVI';
+    return;
+  }
+  try {
+    const amount = ethers.parseUnits(input, 18);
+    const [fee, sold, collat, owed, usdt] = await contract.previewDeposit(amount);
+    document.getElementById('prevFee').textContent = fmtKavi(fee);
+    document.getElementById('prevSold').textContent = fmtKavi(sold);
+    document.getElementById('prevCollat').textContent = fmtKavi(collat);
+    document.getElementById('prevOwed').textContent = fmtKavi(owed);
+    document.getElementById('prevUsdt').textContent = fmtUsdt(usdt);
+    document.getElementById('depositPreview').style.display = 'block';
+
+    const minUsdt = document.getElementById('minUsdtOut');
+    if (!minUsdt.value) {
+      const autoMin = (usdt * 99n) / 100n;
+      minUsdt.placeholder = 'Auto: ' + fmt(autoMin, 18, 4);
+    }
+    btn.textContent = 'Approve & Deposit ' + parseFloat(input).toLocaleString() + ' KAVI';
+  } catch (e) {
+    document.getElementById('depositPreview').style.display = 'none';
+  }
+}
+
+function setStep(prefix, stepNum, state) {
+  const el = document.getElementById(prefix + 'Step' + stepNum);
+  if (!el) return;
+  el.className = 'tx-step ' + state;
+}
+
+function resetSteps(prefix, count) {
+  for (let i = 1; i <= count; i++) {
+    const el = document.getElementById(prefix + 'Step' + i);
+    if (el) el.className = 'tx-step';
+  }
+}
+
+function showStatusBox(id) {
+  const box = document.getElementById(id);
+  box.style.display = 'block';
+  const txLink = box.querySelector('[id$="TxLink"]');
+  const successMsg = box.querySelector('[id$="SuccessMsg"]');
+  if (txLink) txLink.style.display = 'none';
+  if (successMsg) successMsg.style.display = 'none';
+}
+
+async function refreshAll() {
+  await Promise.allSettled([
+    loadStats(),
+    loadWalletBalances(),
+  ]);
+  const activeTab = document.querySelector('.section.active');
+  if (activeTab && activeTab.id === 'tab-myloans') {
+    await loadMyLoans();
+    await loadPoolInfo();
+  }
+  if (activeTab && activeTab.id === 'tab-admin') {
+    await loadAdminStats();
+  }
+}
+
+async function depositAndBorrow() {
+  if (txPending) return;
+  const input = document.getElementById('kaviAmountInput').value;
+  if (!input || !contract || !userAddress) return;
+
+  const btn = document.getElementById('depositBtn');
+  txPending = true;
+  btn.disabled = true;
+
+  showStatusBox('depositStatus');
+  resetSteps('d', 2);
+
+  try {
+    const amount = ethers.parseUnits(input, 18);
+
+    let minOut = 0n;
+    const minField = document.getElementById('minUsdtOut').value;
+    if (minField) {
+      minOut = ethers.parseUnits(minField, 18);
+    } else {
+      try {
+        const [,,,,usdt] = await contract.previewDeposit(amount);
+        minOut = (usdt * 99n) / 100n;
+      } catch { minOut = 0n; }
+    }
+
+    if (!kaviTokenAddress) kaviTokenAddress = await contract.kaviToken();
+    const kaviContract = new ethers.Contract(kaviTokenAddress, ERC20_ABI, signer);
+    const allowance = await kaviContract.allowance(userAddress, CONTRACT_ADDRESS);
+
+    if (allowance < amount) {
+      setStep('d', 1, 'pending');
+      btn.innerHTML = '<span class="spinner"></span> Waiting for KAVI approval in MetaMask...';
+      const approveTx = await kaviContract.approve(CONTRACT_ADDRESS, ethers.MaxUint256);
+      btn.innerHTML = '<span class="spinner"></span> Confirming KAVI approval on-chain...';
+      await approveTx.wait();
+      setStep('d', 1, 'done');
+      toast('KAVI approved successfully.', 'success');
+    } else {
+      setStep('d', 1, 'skipped');
+    }
+
+    setStep('d', 2, 'pending');
+    btn.innerHTML = '<span class="spinner"></span> Waiting for deposit confirmation in MetaMask...';
+    const tx = await contract.depositAndBorrow(amount, minOut);
+
+    const anchor = document.getElementById('dTxAnchor');
+    anchor.href = 'https://bscscan.com/tx/' + tx.hash;
+    anchor.textContent = tx.hash.slice(0, 18) + '...';
+    document.getElementById('dTxLink').style.display = 'block';
+
+    btn.innerHTML = '<span class="spinner"></span> Transaction submitted — waiting for confirmation...';
+    await tx.wait();
+
+    setStep('d', 2, 'done');
+    document.getElementById('dSuccessMsg').style.display = 'block';
+    toast('Deposit successful! Your USDT loan is in your wallet.', 'success');
+
+    document.getElementById('kaviAmountInput').value = '';
+    document.getElementById('minUsdtOut').value = '';
+    document.getElementById('depositPreview').style.display = 'none';
+
+    await refreshAll();
+  } catch (e) {
+    const msg = e?.info?.error?.message || e?.reason || e?.message || 'Transaction failed';
+    if (!msg.toLowerCase().includes('duplicate') && !msg.toLowerCase().includes('user rejected') && !msg.toLowerCase().includes('user denied')) {
+      toast('Error: ' + msg, 'error');
+    } else if (msg.toLowerCase().includes('user rejected') || msg.toLowerCase().includes('user denied')) {
+      toast('Transaction cancelled by user.', '');
+    }
+    resetSteps('d', 2);
+    document.getElementById('depositStatus').style.display = 'none';
+  } finally {
+    txPending = false;
+    btn.disabled = false;
+    btn.textContent = 'Approve & Deposit KAVI';
+  }
+}
+
+let repayLoanIdCached = null;
+async function loadRepayPreview() {
+  const loanId = document.getElementById('repayLoanId').value;
+  if (loanId === '' || !contract || !userAddress) {
+    document.getElementById('repayPreview').style.display = 'none';
+    document.getElementById('repaySlippage').style.display = 'none';
+    document.getElementById('repayBtn').disabled = true;
+    return;
+  }
+  try {
+    const id = parseInt(loanId);
+    const data = await contract.previewRepay(userAddress, id);
+    const [totalDue, principal, interest, kaviToUser, returnFee, currentAPR] = data;
+
+    document.getElementById('repPrincipal').textContent = fmtUsdt(principal);
+    document.getElementById('repInterest').textContent = fmtUsdt(interest);
+    document.getElementById('repTotal').textContent = fmtUsdt(totalDue);
+    document.getElementById('repAPR').textContent = fmtApr(currentAPR) + ' APR';
+    document.getElementById('repFee').textContent = fmtKavi(returnFee);
+    document.getElementById('repKavi').textContent = fmtKavi(kaviToUser);
+    document.getElementById('repayPreview').style.display = 'block';
+    document.getElementById('repaySlippage').style.display = 'block';
+    document.getElementById('repayBtn').disabled = false;
+    repayLoanIdCached = id;
+  } catch (e) {
+    document.getElementById('repayPreview').style.display = 'none';
+    document.getElementById('repaySlippage').style.display = 'none';
+    document.getElementById('repayBtn').disabled = true;
+    if (e.message && e.message.includes('loan not active')) {
+      toast('This loan is not active or does not exist.', 'error');
+    }
+  }
+}
+
+async function repayLoan() {
+  if (txPending) return;
+  const loanId = repayLoanIdCached;
+  if (loanId === null || !contract || !userAddress) return;
+
+  const btn = document.getElementById('repayBtn');
+  txPending = true;
+  btn.disabled = true;
+
+  showStatusBox('repayStatus');
+  resetSteps('r', 2);
+
+  try {
+    const totalDue = await contract.getTotalDue(userAddress, loanId);
+    const buffer = (totalDue * 101n) / 100n;
+
+    const g = (id) => document.getElementById(id).value || '0';
+    const p = (v) => v === '0' ? 0n : ethers.parseUnits(v, 18);
+
+    const minKaviBuyback = p(g('minKaviBuyback'));
+    const minKaviForLp   = p(g('minKaviForLp'));
+    const minUsdtLp      = p(g('minUsdtLp'));
+    const minKaviLp      = p(g('minKaviLp'));
+
+    if (!usdtTokenAddress) usdtTokenAddress = await contract.usdtToken();
+    const usdtContract = new ethers.Contract(usdtTokenAddress, ERC20_ABI, signer);
+    const allowance = await usdtContract.allowance(userAddress, CONTRACT_ADDRESS);
+
+    if (allowance < buffer) {
+      setStep('r', 1, 'pending');
+      btn.innerHTML = '<span class="spinner"></span> Waiting for USDT approval in MetaMask...';
+      const approveTx = await usdtContract.approve(CONTRACT_ADDRESS, ethers.MaxUint256);
+      btn.innerHTML = '<span class="spinner"></span> Confirming USDT approval on-chain...';
+      await approveTx.wait();
+      setStep('r', 1, 'done');
+      toast('USDT approved successfully.', 'success');
+    } else {
+      setStep('r', 1, 'skipped');
+    }
+
+    setStep('r', 2, 'pending');
+    btn.innerHTML = '<span class="spinner"></span> Waiting for repayment confirmation in MetaMask...';
+    const tx = await contract.repayLoan(loanId, minKaviBuyback, minKaviForLp, minUsdtLp, minKaviLp);
+
+    const anchor = document.getElementById('rTxAnchor');
+    anchor.href = 'https://bscscan.com/tx/' + tx.hash;
+    anchor.textContent = tx.hash.slice(0, 18) + '...';
+    document.getElementById('rTxLink').style.display = 'block';
+
+    btn.innerHTML = '<span class="spinner"></span> Transaction submitted — waiting for confirmation...';
+    await tx.wait();
+
+    setStep('r', 2, 'done');
+    document.getElementById('rSuccessMsg').style.display = 'block';
+    toast('Loan repaid! KAVI has been sent to your wallet.', 'success');
+
+    document.getElementById('repayLoanId').value = '';
+    document.getElementById('repayPreview').style.display = 'none';
+    document.getElementById('repaySlippage').style.display = 'none';
+    repayLoanIdCached = null;
+
+    await refreshAll();
+  } catch (e) {
+    const msg = e?.info?.error?.message || e?.reason || e?.message || 'Transaction failed';
+    if (!msg.toLowerCase().includes('duplicate') && !msg.toLowerCase().includes('user rejected') && !msg.toLowerCase().includes('user denied')) {
+      toast('Error: ' + msg, 'error');
+    } else if (msg.toLowerCase().includes('user rejected') || msg.toLowerCase().includes('user denied')) {
+      toast('Transaction cancelled by user.', '');
+    }
+    resetSteps('r', 2);
+    document.getElementById('repayStatus').style.display = 'none';
+  } finally {
+    txPending = false;
+    btn.disabled = false;
+    btn.textContent = 'Approve USDT & Repay';
+  }
+}
+
+async function loadMyLoans() {
+  if (!contract || !userAddress) return;
+  const list = document.getElementById('loansList');
+  const loading = document.getElementById('loansLoading');
+  list.innerHTML = '';
+  loading.style.display = 'block';
+
+  try {
+    const loans = await contract.getUserLoans(userAddress);
+    loading.style.display = 'none';
+
+    if (loans.length === 0) {
+      list.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">No loans found</div></div>';
+      return;
+    }
+
+    for (let i = loans.length - 1; i >= 0; i--) {
+      const loan = loans[i];
+      const card = document.createElement('div');
+      card.className = 'loan-card' + (loan.active ? '' : ' closed');
+
+      const start = new Date(Number(loan.startTime) * 1000);
+      const now = Date.now();
+      const days = Math.floor((now - Number(loan.startTime) * 1000) / 86400000);
+      const tier = Math.floor(days / 90);
+      const apr = 26 + tier;
+
+      let totalDue = '—', interest = '—';
+      if (loan.active) {
+        try {
+          const due = await contract.getTotalDue(userAddress, i);
+          const acc = await contract.getAccruedInterest(userAddress, i);
+          totalDue = fmtUsdt(due);
+          interest = fmtUsdt(acc);
+        } catch {}
+      }
+
+      card.innerHTML = `
+        <div class="loan-card-header">
+          <div class="loan-id">LOAN #${i} · ${days} days old</div>
+          <div class="loan-badge ${loan.active ? 'active' : 'closed'}">${loan.active ? 'ACTIVE' : 'CLOSED'}</div>
+        </div>
+        <div class="loan-grid">
+          <div class="loan-field">
+            <div class="loan-field-label">Principal</div>
+            <div class="loan-field-value">${fmtUsdt(loan.usdtLoanAmount)}</div>
+          </div>
+          <div class="loan-field">
+            <div class="loan-field-label">KAVI Owed Back</div>
+            <div class="loan-field-value" style="color:var(--accent)">${fmtKavi(loan.kaviOwed)}</div>
+          </div>
+          <div class="loan-field">
+            <div class="loan-field-label">Total Due Now</div>
+            <div class="loan-field-value" style="color:${loan.active ? 'var(--danger)' : 'var(--muted)'}">${loan.active ? totalDue : '—'}</div>
+          </div>
+          <div class="loan-field">
+            <div class="loan-field-label">Interest Accrued</div>
+            <div class="loan-field-value" style="color:var(--warning)">${loan.active ? interest : '—'}</div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div class="apr-badge">⚡ ${apr}% APR · Tier ${tier}</div>
+          <div style="font-size:11px;font-family:var(--mono);color:var(--muted)">
+            Started ${start.toLocaleDateString()}
+          </div>
+        </div>
+        ${loan.active ? `
+        <div style="margin-top:1rem;">
+          <button class="btn btn-outline" style="font-size:12px;padding:8px;" onclick="quickRepay(${i})">
+            Repay Loan #${i} →
+          </button>
+        </div>` : ''}
+      `;
+      list.appendChild(card);
+    }
+  } catch (e) {
+    loading.style.display = 'none';
+    list.innerHTML = '<div class="empty"><div class="empty-icon">⚠</div><div class="empty-text">Failed to load loans</div></div>';
+    toast('Failed to load loans: ' + (e.message || e), 'error');
+  }
+}
+
+function quickRepay(loanId) {
+  document.querySelector('.tab:nth-child(2)').click();
+  document.getElementById('repayLoanId').value = loanId;
+  loadRepayPreview();
+}
+
+async function loadPoolInfo() {
+  if (!contract) return;
+  try {
+    const [pool, rawKavi, rawUsdt] = await contract.poolInfo();
+    const burned = await contract.totalLpBurned();
+    document.getElementById('poolKavi').textContent = fmtKavi(pool);
+    document.getElementById('poolRawKavi').textContent = fmtKavi(rawKavi);
+    document.getElementById('poolRawUsdt').textContent = fmtUsdt(rawUsdt);
+    document.getElementById('poolLpBurned').textContent = fmt(burned, 18, 6) + ' LP';
+  } catch (e) {
+    toast('Could not load pool info: ' + (e.message || e), 'error');
+  }
+}
+
+async function loadAdminStats() {
+  if (!contract) return;
+  try {
+    const [pool, rawKavi, rawUsdt] = await contract.poolInfo();
+    const burned = await contract.totalLpBurned();
+    document.getElementById('adminStatPool').textContent = fmtKavi(pool);
+    document.getElementById('adminStatRawKavi').textContent = fmtKavi(rawKavi);
+    document.getElementById('adminStatUsdt').textContent = fmtUsdt(rawUsdt);
+    document.getElementById('adminStatLp').textContent = fmt(burned, 18, 4) + ' LP';
+    try {
+      const kAddr = await contract.kaviToken();
+      const uAddr = await contract.usdtToken();
+      document.getElementById('adminStatKaviAddr').textContent = kAddr.slice(0,8) + '...' + kAddr.slice(-6);
+      document.getElementById('adminStatUsdtAddr').textContent = uAddr.slice(0,8) + '...' + uAddr.slice(-6);
+      if (!kaviTokenAddress) kaviTokenAddress = kAddr;
+      if (!usdtTokenAddress) usdtTokenAddress = uAddr;
+    } catch {}
+    document.getElementById('adminContent').style.display = 'block';
+    document.getElementById('adminGate').style.display = 'none';
+  } catch (e) {
+    document.getElementById('adminContent').style.display = 'none';
+    document.getElementById('adminGate').style.display = 'block';
+  }
+}
+
+async function updateReservePreview() {
+  const val = document.getElementById('adminReserveAmount').value;
+  const hint = document.getElementById('adminReserveHint');
+  if (!val || !contract) { hint.textContent = 'Enter amount to see pool change'; return; }
+  try {
+    const pool = await contract.kaviPool();
+    const current = parseFloat(ethers.formatUnits(pool, 18));
+    const add = parseFloat(val);
+    hint.textContent = 'Pool: ' + current.toFixed(2) + ' → ' + (current + add).toFixed(2) + ' KAVI';
+    hint.style.color = 'var(--success)';
+  } catch {
+    hint.textContent = 'Could not fetch pool balance';
+    hint.style.color = 'var(--muted)';
+  }
+}
+
+async function adminDepositReserve() {
+  if (txPending) return;
+  const val = document.getElementById('adminReserveAmount').value;
+  if (!val || !contract || !userAddress) return;
+
+  const btn = document.getElementById('adminReserveBtn');
+  txPending = true;
+  btn.disabled = true;
+
+  showStatusBox('adminReserveStatus');
+  resetSteps('a', 2);
+
+  try {
+    const amount = ethers.parseUnits(val, 18);
+    if (!kaviTokenAddress) kaviTokenAddress = await contract.kaviToken();
+    const kaviContract = new ethers.Contract(kaviTokenAddress, ERC20_ABI, signer);
+
+    const allowance = await kaviContract.allowance(userAddress, CONTRACT_ADDRESS);
+    if (allowance < amount) {
+      setStep('a', 1, 'pending');
+      btn.innerHTML = '<span class="spinner"></span> Waiting for KAVI approval in MetaMask...';
+      const approveTx = await kaviContract.approve(CONTRACT_ADDRESS, ethers.MaxUint256);
+      btn.innerHTML = '<span class="spinner"></span> Confirming KAVI approval on-chain...';
+      await approveTx.wait();
+      setStep('a', 1, 'done');
+      toast('KAVI approved successfully.', 'success');
+    } else {
+      setStep('a', 1, 'skipped');
+    }
+
+    setStep('a', 2, 'pending');
+    btn.innerHTML = '<span class="spinner"></span> Waiting for deposit confirmation in MetaMask...';
+    const tx = await contract.depositKaviReserve(amount);
+
+    const anchor = document.getElementById('aTxAnchor');
+    anchor.href = 'https://bscscan.com/tx/' + tx.hash;
+    anchor.textContent = tx.hash.slice(0, 18) + '...';
+    document.getElementById('aTxLink').style.display = 'block';
+
+    btn.innerHTML = '<span class="spinner"></span> Transaction submitted — waiting for confirmation...';
+    await tx.wait();
+
+    setStep('a', 2, 'done');
+    document.getElementById('aSuccessMsg').style.display = 'block';
+    toast('Reserve deposited successfully. Pool balance updated.', 'success');
+
+    document.getElementById('adminReserveAmount').value = '';
+    document.getElementById('adminReserveHint').textContent = 'Enter amount to see pool change';
+    document.getElementById('adminReserveHint').style.color = 'var(--muted)';
+    await loadAdminStats();
+    await loadStats();
+  } catch (e) {
+    const msg = e?.info?.error?.message || e?.reason || e?.message || 'Transaction failed';
+    if (!msg.toLowerCase().includes('duplicate') && !msg.toLowerCase().includes('user rejected') && !msg.toLowerCase().includes('user denied')) {
+      toast('Error: ' + msg, 'error');
+    } else if (msg.toLowerCase().includes('user rejected') || msg.toLowerCase().includes('user denied')) {
+      toast('Transaction cancelled by user.', '');
+    }
+    resetSteps('a', 2);
+    document.getElementById('adminReserveStatus').style.display = 'none';
+  } finally {
+    txPending = false;
+    btn.disabled = false;
+    btn.textContent = 'Approve & Deposit KAVI Reserve';
+  }
+}
+
+async function prefillToken(type) {
+  const field = document.getElementById('ewTokenAddr');
+  try {
+    if (type === 'kavi') {
+      if (!kaviTokenAddress) kaviTokenAddress = await contract.kaviToken();
+      field.value = kaviTokenAddress;
+    } else if (type === 'usdt') {
+      if (!usdtTokenAddress) usdtTokenAddress = await contract.usdtToken();
+      field.value = usdtTokenAddress;
+    } else if (type === 'lp') {
+      const lp = await contract.lpToken();
+      field.value = lp;
+    }
+    await fetchEwBalance();
+  } catch (e) { toast('Could not fetch token address', 'error'); }
+}
+
+function prefillRecipient() {
+  if (userAddress) document.getElementById('ewRecipient').value = userAddress;
+}
+
+async function prefillMaxAmount() {
+  const addr = document.getElementById('ewTokenAddr').value.trim();
+  if (!addr || !ethers.isAddress(addr)) { toast('Enter a valid token address first', 'error'); return; }
+  try {
+    const tok = new ethers.Contract(addr, ERC20_ABI, provider);
+    const bal = await tok.balanceOf(CONTRACT_ADDRESS);
+    const dec = await tok.decimals();
+    document.getElementById('ewAmount').value = ethers.formatUnits(bal, dec);
+    document.getElementById('ewBalDisplay').textContent = ethers.formatUnits(bal, dec) + ' tokens';
+    document.getElementById('ewBalanceInfo').style.display = 'block';
+  } catch (e) { toast('Could not fetch balance: ' + (e.message || e), 'error'); }
+}
+
+async function fetchEwBalance() {
+  const addr = document.getElementById('ewTokenAddr').value.trim();
+  if (!addr || !ethers.isAddress(addr)) return;
+  try {
+    const tok = new ethers.Contract(addr, ERC20_ABI, provider);
+    const bal = await tok.balanceOf(CONTRACT_ADDRESS);
+    const dec = await tok.decimals();
+    document.getElementById('ewBalDisplay').textContent = parseFloat(ethers.formatUnits(bal, dec)).toFixed(4) + ' tokens';
+    document.getElementById('ewBalanceInfo').style.display = 'block';
+  } catch {}
+}
+
+function toggleEwBtn() {
+  const checked = document.getElementById('ewConfirm').checked;
+  document.getElementById('ewBtn').disabled = !checked;
+}
+
+async function adminEmergencyWithdraw() {
+  if (txPending) return;
+  const tokenAddr = document.getElementById('ewTokenAddr').value.trim();
+  const recipient = document.getElementById('ewRecipient').value.trim();
+  const amountStr = document.getElementById('ewAmount').value.trim();
+
+  if (!tokenAddr || !recipient || !amountStr) { toast('Fill all fields', 'error'); return; }
+  if (!ethers.isAddress(tokenAddr)) { toast('Invalid token address', 'error'); return; }
+  if (!ethers.isAddress(recipient)) { toast('Invalid recipient address', 'error'); return; }
+  if (!contract || !userAddress) return;
+
+  const btn = document.getElementById('ewBtn');
+  const status = document.getElementById('ewStatus');
+
+  txPending = true;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Sending...';
+
+  try {
+    const tok = new ethers.Contract(tokenAddr, ERC20_ABI, provider);
+    const dec = await tok.decimals();
+    const amount = ethers.parseUnits(amountStr, dec);
+
+    const tx = await contract.emergencyWithdraw(tokenAddr, recipient, amount);
+    status.innerHTML = 'Tx: <a class="tx-link" href="https://bscscan.com/tx/' + tx.hash + '" target="_blank">' + tx.hash.slice(0,22) + '...</a>';
+    await tx.wait();
+
+    toast('Emergency withdrawal successful!', 'success');
+    status.textContent = 'Done! Tokens sent to recipient.';
+    document.getElementById('ewConfirm').checked = false;
+    toggleEwBtn();
+    loadAdminStats();
+    loadStats();
+  } catch (e) {
+    const msg = e?.info?.error?.message || e?.reason || e?.message || 'Failed';
+    if (!msg.includes('duplicate')) {
+      toast('Error: ' + msg, 'error');
+      status.textContent = 'Error: ' + msg;
+    }
+  } finally {
+    txPending = false;
+    btn.disabled = !document.getElementById('ewConfirm').checked;
+    btn.textContent = 'Emergency Withdraw';
+  }
+}
+
+// Init: show connect prompts by default
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('depositConnectPrompt').style.display = 'block';
+  document.getElementById('depositForm').style.display = 'none';
+  document.getElementById('repayConnectPrompt').style.display = 'block';
+  document.getElementById('repayForm').style.display = 'none';
+  document.getElementById('loansConnectPrompt').style.display = 'block';
+  document.getElementById('adminTab').style.display = 'none';
+  document.getElementById('adminContent').style.display = 'none';
+  document.getElementById('adminGate').style.display = 'none';
+
+  // Auto-connect if already approved
+  if (window.ethereum) {
+    window.ethereum.request({ method: 'eth_accounts' })
+      .then(accounts => { if (accounts.length > 0) connectWallet(); })
+      .catch(() => {});
+  }
+});
+</script>
+</body>
+</html>
